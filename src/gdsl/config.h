@@ -105,7 +105,7 @@
 /* Define to `unsigned' if <sys/types.h> does not define. */
 /* #undef size_t */
 
-/* #undef HAVE_LINUX */
+#define HAVE_LINUX 1
 /* #undef HAVE_FREEBSD */
 /* #undef HAVE_NETBSD */
 /* #undef HAVE_DEBUG */

@@ -1,4 +1,7 @@
 #!/bin/bash
 
+mkdir -p bin
+mkdir -p lib
+
 cd src
 make nodae

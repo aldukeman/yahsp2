@@ -10,3 +10,7 @@ YAHSP2 algorithm from IPC 2011
   year={2011}
 }
 ```
+
+Requires generic data structures library (GDSL):
+http://home.gna.org/gdsl/
+* configure; make; sudo make install

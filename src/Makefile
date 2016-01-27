@@ -20,8 +20,7 @@ MTEXE     	= $(EXEDIR)/cpt-mt
 RATP     	= $(EXEDIR)/cpt-ratp
 LIB      	= $(LIBDIR)/libcpt.a
 MTLIB      	= $(LIBDIR)/libcpt-mt.a
-LDLIBS   =  -lm -lgmp -fopenmp
-#-static
+LDLIBS   =  -lm -lgmp -fopenmp -lgdsl
 
 FLEX_SOURCES = \
 	parser.lex
@@ -63,10 +62,6 @@ LIBSOURCES =  \
 
 ALLSOURCES = $(BISON_SOURCES) $(FLEX_SOURCES) $(SOURCES) $(YSOURCES) $(MTYSOURCES) $(EXESOURCES) $(RATPSOURCES) $(LIBSOURCES)
 
-GDSL_DIR = gdsl
-
-GDSL_STATIC = $(GDSL_DIR)/src/.libs/libgdsl.a 
-
 BISON_GEN = $(BISON_SOURCES:.y=.tab.c)
 FLEX_GEN =  $(FLEX_SOURCES:.lex=.yy.c)
 
@@ -76,10 +71,6 @@ YOBJECTS = $(YSOURCES:.c=.o)
 MTYOBJECTS = $(MTYSOURCES:.c=.o) 
 RATPOBJECTS = $(RATPSOURCES:.c=.o) 
 LIBOBJECTS = $(LIBSOURCES:.c=.o) 
-
-STATIC_LIBS = $(GDSL_STATIC) 
-
-
 
 .PHONY : all pp ratp dep clean distclean win
 
@@ -103,28 +94,19 @@ ratp: $(RATP)
 wct: CFLAGS += -DWALLCLOCK_TIME
 wct: exe
 
-win: GDSL_OPT = CFLAGS="-O3 -mno-cygwin"
-win: CPPFLAGS += -DWALLCLOCK_TIME -DSCHED
-win: CFLAGS = -mno-cygwin
-win: LDLIBS = -static -mno-cygwin
-win: STATIC_LIBS += /usr/lib/mingw/libgmp.a
-win: $(RATP)
+$(EXE): $(OBJECTS) $(YOBJECTS) $(EXEOBJECTS)  
+	$(CC) -o $@  $(OBJECTS) $(YOBJECTS) $(EXEOBJECTS) $(LDLIBS)
 
-$(EXE): $(GDSL_STATIC) $(OBJECTS) $(YOBJECTS) $(EXEOBJECTS)  
-	$(CC) -o $@  $(OBJECTS) $(YOBJECTS) $(EXEOBJECTS) $(STATIC_LIBS) $(LDLIBS)
+$(MTEXE): $(OBJECTS) $(MTYOBJECTS) $(EXEOBJECTS)  
+	$(CC) -o $@  $(OBJECTS) $(MTYOBJECTS) $(EXEOBJECTS) $(LDLIBS)
 
-$(MTEXE): $(GDSL_STATIC) $(OBJECTS) $(MTYOBJECTS) $(EXEOBJECTS)  
-	$(CC) -o $@  $(OBJECTS) $(MTYOBJECTS) $(EXEOBJECTS) $(STATIC_LIBS) $(LDLIBS)
+$(RATP): $(OBJECTS) $(RATPOBJECTS)  
+	$(CC) -o $@  $(OBJECTS) $(RATPOBJECTS) $(LDLIBS)
 
-$(RATP): $(GDSL_STATIC) $(OBJECTS) $(RATPOBJECTS)  
-	$(CC) -o $@  $(OBJECTS) $(RATPOBJECTS) $(STATIC_LIBS) $(LDLIBS)
-
-$(LIB): $(GDSL_STATIC) $(OBJECTS) $(YOBJECTS) $(LIBOBJECTS)
-	cp $(GDSL_STATIC) $@
+$(LIB): $(OBJECTS) $(YOBJECTS) $(LIBOBJECTS)
 	$(AR) rcs $@ $(OBJECTS) $(YOBJECTS) $(LIBOBJECTS)
 
-$(MTLIB): $(GDSL_STATIC) $(OBJECTS) $(MTYOBJECTS) $(LIBOBJECTS)
-	cp $(GDSL_STATIC) $@
+$(MTLIB): $(OBJECTS) $(MTYOBJECTS) $(LIBOBJECTS)
 	$(AR) rcs $@ $(OBJECTS) $(MTYOBJECTS) $(LIBOBJECTS)
 
 $(BISON_GEN): $(BISON_SOURCES)
@@ -132,9 +114,6 @@ $(BISON_GEN): $(BISON_SOURCES)
 
 $(FLEX_GEN): $(FLEX_SOURCES) $(BISON_GEN)
 	$(FLEX) $(FLEX_SOURCES)
-
-$(GDSL_STATIC):
-	cd $(GDSL_DIR) ; ./configure $(GDSL_OPT) ; make
 
 dep:
 	makedepend -- $(ALLSOURCES) 
@@ -144,8 +123,3 @@ depr:
 
 clean:
 	rm -f $(EXE) $(MTEXE) $(LIB) $(MTLIB) $(BISON_GEN) $(FLEX_GEN) $(OBJECTS) $(YOBJECTS) $(MTYOBJECTS) $(EXEOBJECTS)  $(RATPOBJECTS) $(LIBOBJECTS) parser.tab.h *~ core
-
-distclean: clean
-	rm -f $(GDSL_STATIC) ; cd $(GDSL_DIR) ; make distclean
-
- 
